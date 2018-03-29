@@ -9,8 +9,6 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -21,11 +19,13 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 
-public class WaifuRamble implements ItemListener {
+public class WaifuRamble {
 	public JPanel cards; // a panel that uses CardLayout
-	private CardLayout c1;
+	private CardLayout cardLayout; // CardLayout object
 	private JPanel mainMenu; // card 1
 	private JPanel battleScreen; // card 2
+	private static JFrame frame;
+	private JPanel endGameScreen;
 	// private JPanel endGameScreen; // card 3
 
 	public void addComponentToPane(Container pane) {
@@ -35,15 +35,73 @@ public class WaifuRamble implements ItemListener {
 		initializeMainMenu();
 		battleScreen = new JPanel(); // card 2
 		initializeBattleScreen();
-		// endGameScreen = new JPanel(); // card 3
+		endGameScreen = new JPanel();
+		initializeEndGameScreen();
 
 		// Create the panel that contains the "cards".
 		cards = new JPanel(new CardLayout());
 		cards.setPreferredSize(new Dimension(800, 600));
 		cards.add(mainMenu, "Main Menu");
 		cards.add(battleScreen, "Battle Screen");
+		cards.add(endGameScreen, "End Game Screen");
+		// Initialize cardLayout
+		cardLayout = (CardLayout) (cards.getLayout());
 
 		pane.add(cards, BorderLayout.CENTER);
+
+	}
+
+	private void initializeEndGameScreen() {
+		endGameScreen.setLayout(new BorderLayout(0, 0));
+
+		JLabel lblEndGameTitle = createLblEndGameTitle();
+		endGameScreen.add(lblEndGameTitle, BorderLayout.NORTH);
+
+		JLabel lblWinner = createLblWinner();
+		endGameScreen.add(lblWinner, BorderLayout.CENTER);
+
+		JPanel btnPanelEndGame = new JPanel();
+		endGameScreen.add(btnPanelEndGame, BorderLayout.SOUTH);
+
+		JButton btnRestart = createBtnRestart();
+		btnPanelEndGame.add(btnRestart);
+
+		JButton btnExit = createBtnExit();
+		btnPanelEndGame.add(btnExit);
+
+	}
+
+	private JButton createBtnExit() {
+		JButton btnExit = new JButton("Exit");
+		btnExit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		return btnExit;
+	}
+
+	private JButton createBtnRestart() {
+		JButton btnRestart = new JButton("Restart");
+		btnRestart.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				cardLayout.show(cards, "Main Menu");
+			}
+		});
+		return btnRestart;
+	}
+
+	private JLabel createLblWinner() {
+		JLabel lblWinner = new JLabel("Alloted spot to show who the winner is...");
+		lblWinner.setHorizontalAlignment(SwingConstants.CENTER);
+		return lblWinner;
+	}
+
+	private JLabel createLblEndGameTitle() {
+		JLabel lblEndGameTitle = new JLabel("Winner!!!");
+		lblEndGameTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		lblEndGameTitle.setFont(new Font("Dialog", Font.PLAIN, 35));
+		return lblEndGameTitle;
 	}
 
 	/********************************************************/
@@ -57,6 +115,14 @@ public class WaifuRamble implements ItemListener {
 
 		JPanel panelCenter = new JPanel();
 		battleScreen.add(panelCenter, BorderLayout.CENTER);
+
+		JButton btnToendgametest = new JButton("toEndGame(test)");
+		btnToendgametest.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				cardLayout.show(cards, "End Game Screen");
+			}
+		});
+		battleScreen.add(btnToendgametest, BorderLayout.SOUTH);
 	}
 
 	private void initializeMainMenu() {
@@ -133,7 +199,7 @@ public class WaifuRamble implements ItemListener {
 		JButton btnStart = new JButton("start");
 		btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				c1.next(cards);
+				cardLayout.show(cards, "Battle Screen");
 			}
 		});
 
@@ -177,17 +243,12 @@ public class WaifuRamble implements ItemListener {
 		return btnC_4;
 	}
 
-	public void itemStateChanged(ItemEvent evt) {
-		c1 = (CardLayout) (cards.getLayout());
-		c1.show(cards, (String) evt.getItem());
-	}
-
 	/************************************************************
 	 * Create the GUI and show it.
 	 */
 	private static void createAndShowGUI() {
 		// Create and set up the window.
-		JFrame frame = new JFrame("Waifu Ramble!!!");
+		frame = new JFrame("Waifu Ramble!!!");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setBounds(100, 100, 800, 600);
 
@@ -201,9 +262,7 @@ public class WaifuRamble implements ItemListener {
 	}
 
 	public static void main(String[] args) {
-		/* Use an appropriate Look and Feel */
 		try {
-			// UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 			UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
 		} catch (UnsupportedLookAndFeelException ex) {
 			ex.printStackTrace();
@@ -214,11 +273,8 @@ public class WaifuRamble implements ItemListener {
 		} catch (ClassNotFoundException ex) {
 			ex.printStackTrace();
 		}
-		/* Turn off metal's use of bold fonts */
 		UIManager.put("swing.boldMetal", Boolean.FALSE);
 
-		// Schedule a job for the event dispatch thread:
-		// creating and showing this application's GUI.
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				createAndShowGUI();
