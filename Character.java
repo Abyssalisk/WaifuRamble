@@ -1,5 +1,7 @@
 package game;
 
+import javax.swing.ImageIcon;
+
 public class Character {
 
 	public final String name;
@@ -11,30 +13,9 @@ public class Character {
 	private final int meleeDamage;
 	private int rangeDamage;
 	public boolean isDead;
-
-	public static void main(String[] args) {
-		// using builder to create characters
-		Character saber = new Character.Builder().name("Saber").health(100).meleeAttack("slash").defend("defend")
-				.rangedAttack("slash wave").build();
-		Character yuno = new Character.Builder().name("Yuno").health(100).meleeAttack("chop").defend("defend")
-				.rangedAttack("throw axe").build();
-
-		System.out.println(saber.toString());
-		System.out.println(yuno.toString());
-		System.out.println();
-
-		System.out.println(saber.isDead ? "Saber is dead" : yuno.meleeAttack(yuno, saber));
-		System.out.printf("%s Health: %d%n", saber.name, saber.health);
-
-		System.out.println(saber.isDead ? "Saber is dead" : yuno.rangedAttack(saber));
-		System.out.printf("%s Health: %d%n", saber.name, saber.health);
-
-		System.out.println(saber.isDead ? "Saber is dead" : yuno.meleeAttack(yuno, saber));
-		System.out.printf("%s Health: %d%n", saber.name, saber.health);
-
-		System.out.println(saber.isDead ? "Saber is dead" : yuno.meleeAttack(yuno, saber));
-
-	}
+	public final ImageIcon characterImage;
+	// new
+	// ImageIcon(WaifuRamble.class.getResource("/Resources/SaberSelectionCropped.png"
 
 	private Character(Builder builder) {
 		this.name = builder.name;
@@ -45,6 +26,7 @@ public class Character {
 		this.meleeDamage = 25;
 		this.rangeDamage = 50;
 		this.isDead = false;
+		this.characterImage = builder.characterImage;
 	}
 
 	public int damage(Character character, int damageType) {
@@ -77,6 +59,7 @@ public class Character {
 		private String meleeAttack;
 		private String rangedAttack;
 		private String defend;
+		private ImageIcon characterImage;
 
 		public Builder name(final String name) {
 			this.name = name;
@@ -100,6 +83,11 @@ public class Character {
 
 		public Builder defend(final String defend) {
 			this.defend = defend;
+			return this;
+		}
+
+		public Builder characterImage(final ImageIcon characterImage) {
+			this.characterImage = characterImage;
 			return this;
 		}
 
