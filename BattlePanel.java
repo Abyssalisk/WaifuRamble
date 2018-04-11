@@ -1,10 +1,13 @@
 package game;
 
+import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -19,10 +22,12 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 	private boolean p1RightPressed = false;
 	private boolean p2RightPressed = false;
 	private int p1XLocation = 0, p1XVelocity = 0;
-	private int p2XLocation = 550, p2XVelocity = 0; // Not going to mess with
-													// jumping
-	// since I cut off all their knees.
+	private int p2XLocation = 550, p2XVelocity = 0;
+	// No jumping since I cut off at the knee to match up the images.
 
+	/**
+	 * Starts the listeners and timer for the battle.
+	 */
 	public BattlePanel()
 	{
 		tm.start();
@@ -31,15 +36,30 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		setFocusTraversalKeysEnabled(false);
 	}
 
+	/**
+	 * Paints the characters sprites onto the battlefield.
+	 */
 	@Override
 	public void paintComponent(Graphics g)
 	{
 		super.paintComponent(g);
-		ImageIcon p1 = new ImageIcon(WaifuRamble.class.getResource(getPlayerOneImage()));
-		ImageIcon p2 = new ImageIcon(WaifuRamble.class.getResource(getPlayerTwoImage()));
+		ImageIcon p1Left = new ImageIcon(WaifuRamble.class.getResource(getPlayerOneImage()));
+		ImageIcon p2Left = new ImageIcon(WaifuRamble.class.getResource(getPlayerTwoImage()));
+		ImageIcon p1Right = new ImageIcon(WaifuRamble.class.getResource(getPlayerOneImageR()));
+		ImageIcon p2Right = new ImageIcon(WaifuRamble.class.getResource(getPlayerTwoImageR()));
 
-		p1.paintIcon(this, g, p1XLocation, 360);
-		p2.paintIcon(this, g, p2XLocation, 360);
+		if (p1XLocation < p2XLocation)
+		{
+			p1Right.paintIcon(this, g, p1XLocation, 360);
+		} else
+			p1Left.paintIcon(this, g, p1XLocation, 360);
+
+		if (p2XLocation > p1XLocation)
+		{
+			p2Left.paintIcon(this, g, p2XLocation, 360);
+		} else
+			p2Right.paintIcon(this, g, p2XLocation, 360);
+
 		requestFocus();
 	}
 
@@ -79,6 +99,10 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		repaint();
 	}
 
+	/**
+	 * Performs the sprites actions depending on what key is pressed. Toggles
+	 * the movement values for smoother controls.
+	 */
 	public void keyPressed(KeyEvent e)
 	{
 		if (e.getKeyCode() == KeyEvent.VK_A)
@@ -110,6 +134,10 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 	{
 	}
 
+	/**
+	 * Toggles the pressed down booleans for the two characters movement
+	 * controls.
+	 */
 	public void keyReleased(KeyEvent e)
 	{
 		switch (e.getKeyCode())
@@ -172,4 +200,74 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 			return "Buff Magikarp";
 		}
 	}
+
+	/**
+	 * Selects the Battle Sprite for player one facing right.
+	 * 
+	 * @return
+	 */
+	public static String getPlayerOneImageR()
+	{
+		switch (WaifuRamble.playerOne.name)
+		{
+		case "Saber":
+			return "/Resources/SaberBattleR.png";
+		case "Zelda":
+			return "/Resources/ZeldaBattleR.png";
+		case "Yuno":
+			return "/Resources/YunoBattleR.png";
+		case "Yoruichi":
+			return "/Resources/YoruichiBattleR.png";
+		default:
+			return "Buff Magikarp";
+		}
+	}
+
+	/**
+	 * Selects the Battle Sprite for Player two facing right.
+	 * 
+	 * @return
+	 */
+	public static String getPlayerTwoImageR()
+	{
+		switch (WaifuRamble.playerTwo.name)
+		{
+		case "Saber":
+			return "/Resources/SaberBattleR.png";
+		case "Zelda":
+			return "/Resources/ZeldaBattleR.png";
+		case "Yuno":
+			return "/Resources/YunoBattleR.png";
+		case "Yoruichi":
+			return "/Resources/YoruichiBattleR.png";
+		default:
+			return "Buff Magikarp";
+		}
+	}
+}
+
+/**
+ * Mirrors sprite images. I found this online.
+ * 
+ * @author Stack Overflow
+ *
+ */
+@SuppressWarnings("serial")
+class MirrorImageIcon extends ImageIcon
+{
+
+	public MirrorImageIcon(URL url)
+	{
+		super(url);
+	}
+
+	@Override
+	public synchronized void paintIcon(Component c, Graphics g, int x, int y)
+	{
+		Graphics2D g2 = (Graphics2D) g.create();
+		g2.translate(getIconWidth(), 0);
+		g2.scale(-1, 1);
+		super.paintIcon(c, g2, x, y);
+	}
+
 }

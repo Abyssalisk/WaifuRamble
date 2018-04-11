@@ -159,22 +159,34 @@ public class WaifuRamble
 		BattlePanel battlePanel = new BattlePanel();
 		battleScreen.add(battlePanel, BorderLayout.CENTER);
 
-		/**
-		 * JButton btnAttackPlayerOneTest = new JButton("Attack Player One
-		 * Test"); btnAttackPlayerOneTest.addActionListener(new ActionListener()
-		 * { public void actionPerformed(ActionEvent e) {
-		 * playerOne.meleeAttack(playerOne, playerTwo); // player one is //
-		 * attacking // player two checkIsDead(playerTwo);
-		 * updateHealthLabels(playerOne, playerTwo); } });
-		 * battlePanel.add(btnAttackPlayerOneTest);
-		 * 
-		 * JButton btnAttack = new JButton("AttackPlayerTwoTest");
-		 * btnAttack.addActionListener(new ActionListener() { public void
-		 * actionPerformed(ActionEvent e) { playerTwo.meleeAttack(playerTwo,
-		 * playerOne); // player two is // attacking // player one
-		 * checkIsDead(playerOne); updateHealthLabels(playerOne, playerTwo); }
-		 * }); battlePanel.add(btnAttack);
-		 **/
+		JButton btnAttackPlayerOneTest = new JButton("Attack Player One Test");
+		btnAttackPlayerOneTest.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				playerOne.meleeAttack(playerOne, playerTwo); // player one is
+																// attacking
+																// player two
+				checkIsDead(playerTwo);
+				updateHealthLabels(playerOne, playerTwo);
+			}
+		});
+		battlePanel.add(btnAttackPlayerOneTest);
+
+		JButton btnAttack = new JButton("AttackPlayerTwoTest");
+		btnAttack.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				playerTwo.meleeAttack(playerTwo, playerOne); // player two is //
+																// attacking //
+																// player one
+				checkIsDead(playerOne);
+				updateHealthLabels(playerOne, playerTwo);
+			}
+		});
+		battlePanel.add(btnAttack);
+
 	}
 
 	protected void checkIsDead(Character character)
