@@ -1,13 +1,10 @@
 package game;
 
-import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -180,7 +177,7 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 	}
 
 	/**
-	 * Selects the Battle Sprite for PLayer two.
+	 * Selects the Battle Sprite for Player two.
 	 * 
 	 * @return
 	 */
@@ -244,30 +241,4 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 			return "Buff Magikarp";
 		}
 	}
-}
-
-/**
- * Mirrors sprite images. I found this online.
- * 
- * @author Stack Overflow
- *
- */
-@SuppressWarnings("serial")
-class MirrorImageIcon extends ImageIcon
-{
-
-	public MirrorImageIcon(URL url)
-	{
-		super(url);
-	}
-
-	@Override
-	public synchronized void paintIcon(Component c, Graphics g, int x, int y)
-	{
-		Graphics2D g2 = (Graphics2D) g.create();
-		g2.translate(getIconWidth(), 0);
-		g2.scale(-1, 1);
-		super.paintIcon(c, g2, x, y);
-	}
-
 }
