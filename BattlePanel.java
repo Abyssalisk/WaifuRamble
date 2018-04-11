@@ -13,7 +13,11 @@ import javax.swing.Timer;
 @SuppressWarnings("serial")
 public class BattlePanel extends JPanel implements ActionListener, KeyListener
 {
-	Timer tm = new Timer(5, this);
+	Timer tm = new Timer(3, this);
+	private boolean p1LeftPressed = false;
+	private boolean p2LeftPressed = false;
+	private boolean p1RightPressed = false;
+	private boolean p2RightPressed = false;
 	private int p1XLocation = 0, p1XVelocity = 0;
 	private int p2XLocation = 550, p2XVelocity = 0; // Not going to mess with
 													// jumping
@@ -36,15 +40,42 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 
 		p1.paintIcon(this, g, p1XLocation, 360);
 		p2.paintIcon(this, g, p2XLocation, 360);
+		requestFocus();
 	}
 
 	/**
-	 * Moves the sprite's location on the JPanel.
+	 * Moves the sprite's location on the JPanel. Added functionality to make
+	 * controls smooth.
 	 */
 	public void actionPerformed(ActionEvent e)
 	{
 		this.p1XLocation += p1XVelocity;
 		this.p2XLocation += p2XVelocity;
+
+		// =================== P1 Smooth code =========================
+		if (!p1LeftPressed && !p1RightPressed)
+		{
+			p1XVelocity = 0;
+		} else if (!p1LeftPressed && p1RightPressed)
+		{
+			p1XVelocity = 1;
+		} else if (p1LeftPressed && !p1RightPressed)
+		{
+			p1XVelocity = -1;
+		}
+
+		// =================== P2 Smooth code ==========================
+		if (!p2LeftPressed && !p2RightPressed)
+		{
+			p2XVelocity = 0;
+		} else if (!p2LeftPressed && p2RightPressed)
+		{
+			p2XVelocity = 1;
+		} else if (p2LeftPressed && !p2RightPressed)
+		{
+			p2XVelocity = -1;
+		}
+
 		repaint();
 	}
 
@@ -53,11 +84,25 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		if (e.getKeyCode() == KeyEvent.VK_A)
 		{
 			p1XVelocity = -1;
+			p1LeftPressed = true;
 		}
 
 		if (e.getKeyCode() == KeyEvent.VK_D)
 		{
 			p1XVelocity = 1;
+			p1RightPressed = true;
+		}
+
+		if (e.getKeyCode() == KeyEvent.VK_L)
+		{
+			p2XVelocity = -1;
+			p2LeftPressed = true;
+		}
+
+		if (e.getKeyCode() == KeyEvent.VK_QUOTE)
+		{
+			p2XVelocity = 1;
+			p2RightPressed = true;
 		}
 	}
 
@@ -67,8 +112,21 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 
 	public void keyReleased(KeyEvent e)
 	{
-		p1XVelocity = 0;
-		p2XVelocity = 0;
+		switch (e.getKeyCode())
+		{
+		case KeyEvent.VK_A:
+			p1LeftPressed = false;
+			break;
+		case KeyEvent.VK_D:
+			p1RightPressed = false;
+			break;
+		case KeyEvent.VK_L:
+			p2LeftPressed = false;
+			break;
+		case KeyEvent.VK_QUOTE:
+			p2RightPressed = false;
+			break;
+		}
 	}
 
 	/**
