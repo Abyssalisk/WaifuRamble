@@ -60,7 +60,9 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		ImageIcon p2Left = new ImageIcon(WaifuRamble.class.getResource(getPlayerTwoImage()));
 		ImageIcon p1Right = new ImageIcon(WaifuRamble.class.getResource(getPlayerOneImageR()));
 		ImageIcon p2Right = new ImageIcon(WaifuRamble.class.getResource(getPlayerTwoImageR()));
-
+		ImageIcon bg = new ImageIcon(WaifuRamble.class.getResource("/Resources/bg.png"));
+		bg.paintIcon(this, g, 0, 0);
+		
 		/**
 		 * Assigns the icon for either left or right facing depending on
 		 * location.
