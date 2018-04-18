@@ -31,8 +31,8 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 	private boolean p2RangeActive = false;
 	private int p1XLocation = 0, p1XVelocity = 0;
 	private int p2XLocation = 550, p2XVelocity = 0;
-	private int p1RangeAttackLocation = p1XLocation;
-	private int p2RangeAttackLocation = p2XLocation + 250;
+	private int p1RangeAttackLocation = p1XLocation + 80;
+	private int p2RangeAttackLocation = p2XLocation + 80;
 	private int p1RangeVelocity = 0;
 	private int p2RangeVelocity = 0;
 	// No jumping since I cut off at the knee to match up the images.
@@ -47,7 +47,6 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		setFocusable(true);
 		setFocusTraversalKeysEnabled(false);
 	}
-	
 
 	/**
 	 * Paints the characters' sprites onto the battlefield.
@@ -62,7 +61,7 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		ImageIcon p2Right = new ImageIcon(WaifuRamble.class.getResource(getPlayerTwoImageR()));
 		ImageIcon bg = new ImageIcon(WaifuRamble.class.getResource("/Resources/bg.png"));
 		bg.paintIcon(this, g, 0, 0);
-		
+
 		/**
 		 * Assigns the icon for either left or right facing depending on
 		 * location.
@@ -91,19 +90,15 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		{
 			g.setColor(Color.RED);
 			g.fillOval(p1RangeAttackLocation, 500, 40, 40);
-			if (p1RangeAttackLocation < 0 || p1RangeAttackLocation > 800)
+			if (p1RangeAttackLocation < -40 || p1RangeAttackLocation > 840)
 			{
 				removePlayer1RangedAttack();
 			}
 			if (p1RangeAttackLocation >= p2RangeAttackLocation - 20
-					&& p1RangeAttackLocation <= p2RangeAttackLocation + 20)
+					&& p1RangeAttackLocation <= p2RangeAttackLocation + 20 && p2RangeActive)
 			{
 				removePlayer1RangedAttack();
 				removePlayer2RangedAttack();
-			}
-			if(p1RangeAttackLocation == p2XLocation) {
-				removePlayer1RangedAttack();
-				
 			}
 		}
 
@@ -115,50 +110,60 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 		{
 			g.setColor(Color.BLUE);
 			g.fillOval(p2RangeAttackLocation, 500, 40, 40);
-			if (p2RangeAttackLocation < 0 || p2RangeAttackLocation > 800)
-			{
+			if (p2RangeAttackLocation < -40 || p2RangeAttackLocation > 840)
 				removePlayer2RangedAttack();
-			}
-			if (p2RangeAttackLocation >= p1RangeAttackLocation - 20
-					&& p2RangeAttackLocation <= p1RangeAttackLocation + 20)
-			{
-				removePlayer1RangedAttack();
-				removePlayer2RangedAttack();
-			}
-			if(p2RangeAttackLocation == p1XLocation) {
-				removePlayer2RangedAttack();
-			}
 		}
+		if (p2RangeAttackLocation >= p1RangeAttackLocation - 20 && p2RangeAttackLocation <= p1RangeAttackLocation + 20
+				&& p1RangeActive)
+		{
+			removePlayer1RangedAttack();
+			removePlayer2RangedAttack();
+		}
+
 		/**
 		 * Puts focus on the BattlePanel so the listeners can react.
 		 */
 		requestFocus();
 	}
 
-	public void setP1RangeAttackLocation(int p1RangeAttackLocation) {
+	public void setP1RangeAttackLocation(int p1RangeAttackLocation)
+	{
 		this.p1RangeAttackLocation = p1RangeAttackLocation;
 	}
 
-
-	public void setP2RangeAttackLocation(int p2RangeAttackLocation) {
+	public void setP2RangeAttackLocation(int p2RangeAttackLocation)
+	{
 		this.p2RangeAttackLocation = p2RangeAttackLocation;
 	}
 
-
-	public int getP1XLocation() {
+	public int getP1XLocation()
+	{
 		return p1XLocation;
 	}
 
-	public int getP2XLocation() {
+	public int getP2XLocation()
+	{
 		return p2XLocation;
 	}
 
-	public int getP1RangeAttackLocation() {
+	public int getP1RangeAttackLocation()
+	{
 		return p1RangeAttackLocation;
 	}
 
-	public int getP2RangeAttackLocation() {
+	public int getP2RangeAttackLocation()
+	{
 		return p2RangeAttackLocation;
+	}
+
+	public boolean isP1RangeActive()
+	{
+		return p1RangeActive;
+	}
+
+	public boolean isP2RangeActive()
+	{
+		return p2RangeActive;
 	}
 
 	/**
@@ -168,11 +173,7 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 	public void removePlayer2RangedAttack()
 	{
 		p2RangeVelocity = 0;
-		if (p2XLocation > p1XLocation)
-		{
-			p2RangeAttackLocation = p2XLocation + 250;
-		} else
-			p2RangeAttackLocation = p2XLocation;
+		p2RangeAttackLocation = p2XLocation + 125;
 		p2RangeActive = false;
 	}
 
@@ -183,11 +184,7 @@ public class BattlePanel extends JPanel implements ActionListener, KeyListener
 	public void removePlayer1RangedAttack()
 	{
 		p1RangeVelocity = 0;
-		if (p1XLocation > p2XLocation)
-		{
-			p1RangeAttackLocation = p1XLocation + 250;
-		} else
-			p1RangeAttackLocation = p1XLocation;
+		p1RangeAttackLocation = p1XLocation + 125;
 		p1RangeActive = false;
 	}
 
