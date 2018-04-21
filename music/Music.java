@@ -5,32 +5,25 @@ import java.io.File;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 
-public class Music
-{
+public class Music {
 	private Clip clip;
 
-	public void startMusic()
-	{
-		class MusicThread extends Thread
-		{
+	public void startMusic() {
+		class MusicThread extends Thread {
 
-			public void run()
-			{
+			public void run() {
 				play();
 				start();
 			}
 
-			public void play()
-			{
-				try
-				{
-					File file = new File("src/waifuRamble.wav");
+			public void play() {
+				try {
+					File file = new File("src/Resources/waifuRamble.wav");
 					clip = AudioSystem.getClip();
 					clip.open(AudioSystem.getAudioInputStream(file));
 					clip.start();
 					Thread.sleep(clip.getMicrosecondLength());
-				} catch (Exception e)
-				{
+				} catch (Exception e) {
 					System.err.println(e.getMessage());
 				}
 			}
@@ -40,8 +33,7 @@ public class Music
 		mt.start();
 	}
 
-	public void stopMusic()
-	{
+	public void stopMusic() {
 		clip.close();
 	}
 }

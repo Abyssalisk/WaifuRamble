@@ -11,6 +11,16 @@ import java.awt.GridLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -25,30 +35,65 @@ import javax.swing.border.EmptyBorder;
 
 import music.Music;
 
-public class WaifuRamble
-{
+/**
+ * Class WaifuRamble is a game where to players choose a Waifu and combat,
+ * similar to a street fighter style game.
+ * 
+ * @author GavinR, SpencerR
+ *
+ */
+public class WaifuRamble {
 	public JPanel cards; // a panel that uses CardLayout
 	private CardLayout cardLayout; // CardLayout object
 	private JPanel mainMenu; // card 1
 	private JPanel battleScreen; // card 2
-	private static JFrame frame;
 	private JPanel endGameScreen; // card 3
+
 	private JPanel panelButtons_1;
+	private static JFrame frame;
 
-	public static Character playerOne;
-	public static Character playerTwo;
-	private JLabel lblCharacter_1_Name;
-	private JLabel lblC_1_Health;
-	private JLabel lblCharacter_2_Name;
-	private JLabel lblC_2_Health;
+	public static Character playerOne; // player one
+	public static Character playerTwo; // player two
+	private JLabel lblCharacter_1_Name; // label to display selected first player's name
+	private JLabel lblC_1_Health; // label to display first player's health
+	private JLabel lblCharacter_2_Name; // label to display selected second player's name
+	private JLabel lblC_2_Health; // label to display second player's health
 
-	private boolean hasChosen = false;
-	private JLabel lblWinner;
+	private boolean hasChosen = false; // both players have chosen or not
+	private JLabel lblWinner; // displays winner on end game screen
 
-	private Music battleMusic;
+	private Music battleMusic; // music for the game from class Music.java
+	private BattlePanel battlePanel; // battle panel with pixel collision and key listeners from BattlePanel.java
 
-	public void addComponentToPane(Container pane)
-	{
+	private int roundNum; // tracks the number of rounds played in a session
+
+	/**
+	 * Fulfills requirement for generic in team project. Never actually used.
+	 * Requirements never say we have to use it, just that is must be included.
+	 */
+	public static void generic() {
+		List<String> words = new ArrayList<String>();
+		Collections.addAll(words, "one", "two", "three", "four", "five");
+		System.out.println("The smallest words of: " + words.toString() + " is: "
+				+ smallest(words.get(0), words.get(1), words.get(2)));
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static <T extends Comparable> T smallest(T x, T y, T z) {
+		T result = x;
+		if (y.compareTo(result) < 0) // check if it is smaller than the current result.
+			result = y;
+		if (z.compareTo(result) < 0)
+			result = z;
+		return result;
+	}
+
+	/**
+	 * Adds all the cards of the card layout to the pane.
+	 * 
+	 * @param pane
+	 */
+	public void addComponentToPane(Container pane) {
 		// Create the "cards".
 		mainMenu = new JPanel(); // card 1
 		initializeMainMenu();
@@ -70,17 +115,22 @@ public class WaifuRamble
 
 	}
 
-	private void initializeEndGameScreen()
-	{
+	/**
+	 * Initializes the EndGameScreen.
+	 */
+	private void initializeEndGameScreen() {
 		endGameScreen.setLayout(new BorderLayout(0, 0));
 
 		JLabel lblEndGameTitle = createLblEndGameTitle();
+		lblEndGameTitle.setBackground(new Color(148, 0, 211));
 		endGameScreen.add(lblEndGameTitle, BorderLayout.NORTH);
 
 		JLabel lblWinner = createLblWinner();
+		lblWinner.setBackground(new Color(148, 0, 211));
 		endGameScreen.add(lblWinner, BorderLayout.CENTER);
 
 		JPanel btnPanelEndGame = new JPanel();
+		btnPanelEndGame.setBackground(new Color(148, 0, 211));
 		endGameScreen.add(btnPanelEndGame, BorderLayout.SOUTH);
 
 		JButton btnRestart = createBtnRestart();
@@ -88,32 +138,47 @@ public class WaifuRamble
 
 		JButton btnExit = createBtnExit();
 		btnPanelEndGame.add(btnExit);
-
 	}
 
-	private JButton createBtnExit()
-	{
+	/**
+	 * Creates the exit button.
+	 * 
+	 * @return
+	 */
+	private JButton createBtnExit() {
 		JButton btnExit = new JButton("Exit");
-		btnExit.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
+		btnExit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Files.deleteIfExists(Paths.get("src/Resources/Loser.txt"));
+				} catch (IOException e1) {
+					System.out.println("Error.");
+					e1.getMessage();
+				}
+
+				System.out.println("\nLosers file deletion successful.");
 				System.exit(0);
 			}
+
 		});
 		return btnExit;
 	}
 
-	private JButton createBtnRestart()
-	{
+	/**
+	 * Creates the restart button, resets fields for replay.
+	 * 
+	 * @return
+	 */
+	private JButton createBtnRestart() {
 		JButton btnRestart = new JButton("Restart");
-		btnRestart.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				battleMusic.stopMusic();
+		btnRestart.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// battleMusic.stopMusic();
+				playerOne.isDead = false;
+				playerTwo.isDead = false;
 				playerOne.health = 100; // reset health
 				playerTwo.health = 100;
+				battlePanel.tm.stop();
 				hasChosen = false; // reset characters
 				cardLayout.show(cards, "Main Menu");
 
@@ -122,62 +187,89 @@ public class WaifuRamble
 		return btnRestart;
 	}
 
-	private JLabel createLblWinner()
-	{
+	/**
+	 * Creates the spot that will display winner.
+	 * 
+	 * @return
+	 */
+	private JLabel createLblWinner() {
 		lblWinner = new JLabel("Alloted spot to show who the winner is...");
 		lblWinner.setFont(new Font("Dialog", Font.BOLD, 57));
+		lblWinner.setForeground(new Color(148, 0, 211));
 		lblWinner.setHorizontalAlignment(SwingConstants.CENTER);
+		lblWinner.setBackground(new Color(148, 0, 211));
 		return lblWinner;
 	}
 
-	private void updateWinnerPic()
-	{
+	/**
+	 * Updates lblWinner with the picture of the winner.
+	 */
+	private void updateWinnerPic() {
 		Character winner;
 		if (playerOne.isDead)
 			winner = playerTwo;
-		else
-		{
+		else {
 			winner = playerOne;
 		}
-		lblWinner.setText(winner.name);
-		lblWinner.setIcon(winner.characterImage); // set to
-													// winner.characterImage
+		if (winner.name == "Yuno") {
+			lblWinner.setIcon(new ImageIcon(WaifuRamble.class.getResource("/Resources/YunoWinner.png")));
+			lblWinner.setText(winner.name);
+		} else if (winner.name == "Yoruichi") {
+			lblWinner.setIcon(new ImageIcon(WaifuRamble.class.getResource("/Resources/YoruichiWinner.png")));
+			lblWinner.setText(winner.name);
+		} else {
+			lblWinner.setText(winner.name);
+			lblWinner.setIcon(winner.characterImage);
+		}
 	}
 
-	private JLabel createLblEndGameTitle()
-	{
+	/**
+	 * Creates LblEndGameTitle and sets properties.
+	 * 
+	 * @return
+	 */
+	private JLabel createLblEndGameTitle() {
 		JLabel lblEndGameTitle = new JLabel("Winner!!!");
 		lblEndGameTitle.setHorizontalAlignment(SwingConstants.CENTER);
 		lblEndGameTitle.setFont(new Font("Dialog", Font.PLAIN, 35));
+		lblEndGameTitle.setForeground(new Color(148, 0, 211));
+		lblEndGameTitle.setBackground(new Color(148, 0, 211));
 		return lblEndGameTitle;
 	}
 
+	// BATTLE SCREEN
 	/********************************************************/
 
-	private void initializeBattleScreen()
-	{
+	/**
+	 * Initializes the battle screen.
+	 */
+	private void initializeBattleScreen() {
 		battleScreen.setLayout(new BorderLayout(0, 0));
 
 		JPanel panelCharacterInfo = new JPanel();
 		initializePanelCharcterInfo(panelCharacterInfo);
 		battleScreen.add(panelCharacterInfo, BorderLayout.NORTH);
 
-		BattlePanel battlePanel = new BattlePanel();
+		battlePanel = new BattlePanel();
 		battleScreen.add(battlePanel, BorderLayout.CENTER);
 
-		class Collision extends Thread
-		{
-			public void run()
-			{
-				while (true)
-				{
-					try
-					{
+		/**
+		 * 
+		 * Collision detects if two pixels collide. If pixel collision occurs, health
+		 * for damaged player is updated and a winner is checked.
+		 * 
+		 * @author SpencerR
+		 *
+		 */
+		class Collision extends Thread {
+			public void run() {
+				while (true) {
+					try {
 
 						// ranged attack for player 2
 						if (battlePanel.getP1XLocation() + 100 <= battlePanel.getP2RangeAttackLocation()
-								&& battlePanel.getP1XLocation() + 150 >= battlePanel.getP2RangeAttackLocation())
-						{
+								&& battlePanel.getP1XLocation() + 150 >= battlePanel.getP2RangeAttackLocation()
+								&& battlePanel.getP2RangeAttackYLocation() >= 300 && battlePanel.isP2RangeActive()) {
 							playerTwo.meleeAttack(playerTwo, playerOne);
 							battlePanel.removePlayer2RangedAttack();
 							checkIsDead(playerOne);
@@ -188,23 +280,20 @@ public class WaifuRamble
 
 						// ranged attack for player 1
 						if (battlePanel.getP2XLocation() + 100 <= battlePanel.getP1RangeAttackLocation()
-								&& battlePanel.getP2XLocation() + 150 >= battlePanel.getP1RangeAttackLocation())
-						{
+								&& battlePanel.getP2XLocation() + 150 >= battlePanel.getP1RangeAttackLocation()
+								&& battlePanel.getP1RangeAttackYLocation() >= 300 && battlePanel.isP1RangeActive()) {
 							playerOne.meleeAttack(playerOne, playerTwo);
 							battlePanel.removePlayer1RangedAttack();
 							checkIsDead(playerTwo);
 							updateHealthLabels(playerOne, playerTwo);
 							Thread.sleep(50);
 						}
-						try
-						{
+						try {
 							Thread.sleep(5);
-						} catch (InterruptedException e)
-						{
+						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-					} catch (Exception e)
-					{
+					} catch (Exception e) {
 						System.out.println("Thread dead...");
 						break;
 					}
@@ -216,61 +305,92 @@ public class WaifuRamble
 		Collision c = new Collision();
 		c.start();
 
-		JButton btnAttackPlayerOneTest = new JButton("Attack Player One Test");
-		btnAttackPlayerOneTest.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				playerOne.meleeAttack(playerOne, playerTwo); // player one is
-																// attacking
-																// player two
-				checkIsDead(playerTwo);
-				updateHealthLabels(playerOne, playerTwo);
-			}
-		});
-		battlePanel.add(btnAttackPlayerOneTest);
-
-		JButton btnAttack = new JButton("AttackPlayerTwoTest");
-		btnAttack.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				playerTwo.meleeAttack(playerTwo, playerOne);
-				checkIsDead(playerOne);
-				updateHealthLabels(playerOne, playerTwo);
-			}
-		});
-		battlePanel.add(btnAttack);
+		// adds the words RAMBLE!!! to the battle screen.
+		JLabel rambleLabel = new JLabel("RAMBLE!!!");
+		rambleLabel.setFont(new Font(null, Font.BOLD, 50));
+		rambleLabel.setForeground(Color.WHITE);
+		battlePanel.add(rambleLabel);
 
 	}
 
-	public void playerOneAttacked(Character playerOne, Character playerTwo)
-	{
+	/**
+	 * Damages playerTwo from playeOne's attack. PlayerOne could be either the true
+	 * first player or second player.
+	 * 
+	 * @param playerOne
+	 * @param playerTwo
+	 */
+	public void playerOneAttacked(Character playerOne, Character playerTwo) {
 		playerTwo.meleeAttack(playerTwo, playerOne);
 		checkIsDead(playerOne);
 		updateHealthLabels(playerOne, playerTwo);
 	}
 
-	public void checkIsDead(Character character)
-	{
-		if (character.isDead)
-		{
+	/**
+	 * Checks if character is dead. Writes the loser to a list of losers in
+	 * "Losers.txt". Prints the losers from "Losers.txt".
+	 * 
+	 * @param character
+	 */
+	public void checkIsDead(Character character) {
+		if (character.isDead) {
+			battlePanel.removePlayer1RangedAttack();
+			battlePanel.removePlayer2RangedAttack();
+
+			// write loser to file
+			try (PrintWriter writer = new PrintWriter("src/Resources/Losers.txt")) {
+				writer.printf("%s Round: %d%n", character.name, ++roundNum);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			// read it and print out list of users for current session.
+			try (BufferedReader reader = new BufferedReader(new FileReader("src/Resources/Losers.txt"))) {
+				System.out.println("List of Losers: ");
+				while (reader.ready()) {
+					System.out.printf("%s%n", reader.readLine());
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 			updateWinnerPic();
 			cardLayout.show(cards, "End Game Screen");
 		}
 	}
 
-	private void updateHealthLabels(Character playerOne2, Character playerTwo2)
-	{
-		lblC_1_Health.setText(Integer.toString(playerOne2.health));
-		lblCharacter_1_Name.setText(playerOne2.name);
-		lblC_2_Health.setText(Integer.toString(playerTwo2.health));
-		lblCharacter_2_Name.setText(playerTwo2.name);
+	/**
+	 * Updates the GUI health labels for both characters.
+	 * 
+	 * @param playerOne
+	 * @param playerTwo
+	 */
+	private void updateHealthLabels(Character playerOne, Character playerTwo) {
+		lblC_1_Health.setText(Integer.toString(playerOne.health));
+		lblC_2_Health.setText(Integer.toString(playerTwo.health));
+
+		// change color for health
+		if (playerOne.health <= 30)
+			lblC_1_Health.setForeground(Color.RED);
+		else
+			lblC_1_Health.setForeground(Color.WHITE); // puts white color if game is restarted
+		if (playerTwo.health <= 30)
+			lblC_2_Health.setForeground(Color.RED);
+		else
+			lblC_2_Health.setForeground(Color.WHITE);
+
+		lblCharacter_1_Name.setText(playerOne.name);
+		lblCharacter_2_Name.setText(playerTwo.name);
+
 	}
 
-	private void initializeMainMenu()
-	{
+	/**
+	 * Initializes the main menu.
+	 */
+	private void initializeMainMenu() {
 		mainMenu.setLayout(new BorderLayout(0, 0));
+
+		battleMusic = new Music();
+		battleMusic.startMusic();
 
 		JPanel panelTitle = new JPanel(); // upper section of panel
 		panelTitle.setBackground(new Color(148, 0, 211));
@@ -291,25 +411,22 @@ public class WaifuRamble
 
 		JLabel p2ControlsLabel = createP2ControlsLabel();
 		panelButtons_1.add(p2ControlsLabel);
-		btnStart.addActionListener(new ActionListener()
-		{
+		btnStart.addActionListener(new ActionListener() {
 
-			public void actionPerformed(ActionEvent e)
-			{ // check if both
-				// players have
-				// selected
-				// characters
-				if (playerTwo != null)
-				{
+			public void actionPerformed(ActionEvent e) { // check if both
+															// players have
+															// selected
+															// characters
+				if (playerTwo != null) {
 					cardLayout.show(cards, "Battle Screen");
 					updateHealthLabels(playerOne, playerTwo); // set health and
-					battleMusic = new Music();
-					battleMusic.startMusic();
-				} else
-				{
+					battlePanel.tm.start();
+					battlePanel.setP1XLocation(0);
+					battlePanel.setP2XLocation(550);
+
+				} else {
 					JFrame warning = null;
-					if (warning == null)
-					{
+					if (warning == null) {
 						warning = new JFrame();
 					}
 					warning.setVisible(true);
@@ -333,10 +450,15 @@ public class WaifuRamble
 		});
 	}
 
-	private JLabel createP2ControlsLabel()
-	{
+	/**
+	 * Creates player two's controls label and informs user of controls for player
+	 * two.
+	 * 
+	 * @return
+	 */
+	private JLabel createP2ControlsLabel() {
 		JLabel p2ControlsLabel = new JLabel(
-				"<html>-PLAYER 2 CONTROLS-<br/><br/>P: Jump | L/ ' : Left/Right<br/>4: Melee Attack<br/>5: Ranged Attack<br/>8: Super</html>");
+				"<html>-PLAYER 2 CONTROLS-<br/><br/>L/ ' : Left/Right<br/>J: Ranged Attack<br/>");
 		p2ControlsLabel.setForeground(new Color(240, 248, 255));
 		p2ControlsLabel.setFont(new Font("DokChampa", Font.BOLD, 12));
 		p2ControlsLabel.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -346,10 +468,15 @@ public class WaifuRamble
 		return p2ControlsLabel;
 	}
 
-	private JLabel createP1ControlsLabel()
-	{
+	/**
+	 * Creates player one's controls label and informs user of controls for player
+	 * two.
+	 * 
+	 * @return
+	 */
+	private JLabel createP1ControlsLabel() {
 		JLabel p1ControlsLabel = new JLabel(
-				"<html>-PLAYER 1 CONTROLS-<br/><br/>W: Jump | A/D: Left/Right<br/>G: Melee Attack<br/>H: Ranged Attack<br/>Y: Super</html>");
+				"<html>-PLAYER 1 CONTROLS-<br/><br/>A/D: Left/Right<br/>G: Ranged Attack<br/>");
 		p1ControlsLabel.setForeground(new Color(240, 248, 255));
 		p1ControlsLabel.setFont(new Font("DokChampa", Font.BOLD, 12));
 		p1ControlsLabel.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -362,8 +489,12 @@ public class WaifuRamble
 		return p1ControlsLabel;
 	}
 
-	private void initializePanelTitle(JPanel panelTitle)
-	{
+	/**
+	 * Initializes the panel title.
+	 * 
+	 * @param panelTitle
+	 */
+	private void initializePanelTitle(JPanel panelTitle) {
 		panelTitle.setLayout(new GridLayout(2, 0, 0, 0));
 
 		JLabel lblTitle = new JLabel("Waifu Ramble!!!");
@@ -379,67 +510,93 @@ public class WaifuRamble
 		panelTitle.add(lblSelectCharacter);
 	}
 
-	private void initializePanelCharcterInfo(JPanel panelCharacterInfo)
-	{
+	/**
+	 * Creates the panel for the each characters control information to be
+	 * displayed.
+	 * 
+	 * @param panelCharacterInfo
+	 */
+	private void initializePanelCharcterInfo(JPanel panelCharacterInfo) {
 		JPanel panelCharacter1Info = createPanelCharacter1Info();
 		panelCharacterInfo.add(panelCharacter1Info);
 		JPanel panelCharacter2Info = createPanelCharacter2Info();
 		panelCharacterInfo.add(panelCharacter2Info);
+		panelCharacterInfo.setBackground(new Color(148, 0, 211));
 	}
 
-	private JPanel createPanelCharacter1Info()
-	{
+	/**
+	 * Creates panel for character one control info.
+	 * 
+	 * @return
+	 */
+	private JPanel createPanelCharacter1Info() {
 		JPanel panelCharacter1Info = new JPanel();
 		panelCharacter1Info.setBorder(new EmptyBorder(0, 0, 0, 250));
 		panelCharacter1Info.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panelCharacter1Info.setLayout(new GridLayout(2, 0, 0, 0));
+		panelCharacter1Info.setBackground(new Color(148, 0, 211));
 
 		lblCharacter_1_Name = new JLabel("character 1 name");
+		lblCharacter_1_Name.setForeground(Color.WHITE);
 		panelCharacter1Info.add(lblCharacter_1_Name);
 
 		lblC_1_Health = new JLabel("c1 health");
+		lblC_1_Health.setForeground(Color.WHITE);
 		panelCharacter1Info.add(lblC_1_Health);
 		return panelCharacter1Info;
 	}
 
-	private JPanel createPanelCharacter2Info()
-	{
+	/**
+	 * Creates panel for character two control info.
+	 * 
+	 * @return
+	 */
+	private JPanel createPanelCharacter2Info() {
 		JPanel panelCharacter2Info = new JPanel();
 		panelCharacter2Info.setBorder(new EmptyBorder(0, 0, 0, 250));
 		panelCharacter2Info.setAlignmentX(Component.RIGHT_ALIGNMENT);
 		panelCharacter2Info.setLayout(new GridLayout(2, 0, 0, 0));
+		panelCharacter2Info.setBackground(new Color(148, 0, 211));
 
 		lblCharacter_2_Name = new JLabel("character 2 name");
 		panelCharacter2Info.add(lblCharacter_2_Name);
+		lblCharacter_2_Name.setForeground(Color.WHITE);
 
 		lblC_2_Health = new JLabel("c2 health");
+		lblC_2_Health.setForeground(Color.WHITE);
 		panelCharacter2Info.add(lblC_2_Health);
 		return panelCharacter2Info;
 	}
 
-	private JButton initializePanelButtons(JPanel panelButtons)
-	{
+	/**
+	 * Initializes the panel for Character selection.
+	 * 
+	 * @param panelButtons
+	 * @return
+	 */
+	private JButton initializePanelButtons(JPanel panelButtons) {
 		mainMenu.add(panelButtons, BorderLayout.CENTER);
 		JButton btnC_4 = initializeCharacterButtons(panelButtons);
 		return btnC_4;
 	}
 
-	private JButton initializeCharacterButtons(JPanel panelButtons)
-	{
+	/**
+	 * Initializes the buttons for the Character selection.
+	 * 
+	 * @param panelButtons
+	 * @return
+	 */
+	private JButton initializeCharacterButtons(JPanel panelButtons) {
 		JButton btnC_1 = new JButton();
 		btnC_1.setIconTextGap(0);
 		btnC_1.setSize(new Dimension(200, 500));
 		btnC_1.setIcon(new ImageIcon(WaifuRamble.class.getResource("/Resources/SaberSelectionCropped.png")));
-		btnC_1.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				if (!hasChosen)
-				{
+		btnC_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!hasChosen) {
 					playerOne = createSaber();
 					hasChosen = true;
-				} else
-				{
+				} else {
 					playerTwo = createSaber();
 				}
 			}
@@ -451,16 +608,12 @@ public class WaifuRamble
 		btnC_2.setIcon(new ImageIcon(WaifuRamble.class.getResource("/Resources/PrincessZeldaCropped.png")));
 		btnC_2.setSize(new Dimension(200, 500));
 		btnC_2.setBounds(200, 0, 200, 500);
-		btnC_2.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				if (!hasChosen)
-				{
+		btnC_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!hasChosen) {
 					playerOne = createZelda();
 					hasChosen = true;
-				} else
-				{
+				} else {
 					playerTwo = createZelda();
 				}
 			}
@@ -472,16 +625,12 @@ public class WaifuRamble
 		btnC_3.setIcon(new ImageIcon(WaifuRamble.class.getResource("/Resources/YunoSelectionCropped.png")));
 		btnC_3.setSize(new Dimension(200, 500));
 		btnC_3.setBounds(400, 0, 200, 500);
-		btnC_3.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				if (!hasChosen)
-				{
+		btnC_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!hasChosen) {
 					playerOne = createYuno();
 					hasChosen = true;
-				} else
-				{
+				} else {
 					playerTwo = createYuno();
 				}
 			}
@@ -492,16 +641,12 @@ public class WaifuRamble
 		btnC_4.setIcon(new ImageIcon(WaifuRamble.class.getResource("/Resources/YoruichiiSelectionCropped.png")));
 		btnC_4.setSize(new Dimension(200, 500));
 		btnC_4.setBounds(600, 0, 200, 500);
-		btnC_4.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				if (!hasChosen)
-				{
+		btnC_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!hasChosen) {
 					playerOne = createYoruichi();
 					hasChosen = true;
-				} else
-				{
+				} else {
 					playerTwo = createYoruichi();
 				}
 			}
@@ -509,32 +654,48 @@ public class WaifuRamble
 		return btnC_4;
 	}
 
-	public Character createYuno()
-	{
+	/**
+	 * Uses the builder form Charcter.java to created character named "Yuno".
+	 * 
+	 * @return
+	 */
+	public Character createYuno() {
 		return new Character.Builder().name("Yuno").health(100).meleeAttack("chop").defend("defend")
 				.rangedAttack("throw axe")
 				.characterImage(new ImageIcon(WaifuRamble.class.getResource("/Resources/YunoSelectionCropped.png")))
 				.build();
 	}
 
-	public Character createSaber()
-	{
+	/**
+	 * Uses the builder form Charcter.java to created character named "Saber".
+	 * 
+	 * @return
+	 */
+	public Character createSaber() {
 		return new Character.Builder().name("Saber").health(100).meleeAttack("slash").defend("defend")
 				.rangedAttack("slash wave")
 				.characterImage(new ImageIcon(WaifuRamble.class.getResource("/Resources/SaberSelectionCropped.png")))
 				.build();
 	}
 
-	public Character createZelda()
-	{
+	/**
+	 * Uses the builder form Charcter.java to created character named "Zelda".
+	 * 
+	 * @return
+	 */
+	public Character createZelda() {
 		return new Character.Builder().name("Zelda").health(100).meleeAttack("slash").defend("defend")
 				.rangedAttack("lullaby")
 				.characterImage(new ImageIcon(WaifuRamble.class.getResource("/Resources/PrincessZeldaCropped.png")))
 				.build();
 	}
 
-	public Character createYoruichi()
-	{
+	/**
+	 * Uses the builder form Charcter.java to created character named "Yoruichi".
+	 * 
+	 * @return
+	 */
+	public Character createYoruichi() {
 		return new Character.Builder().name("Yoruichi").health(100).meleeAttack("scratch").defend("defend")
 				.rangedAttack("cat throw")
 				.characterImage(
@@ -542,11 +703,10 @@ public class WaifuRamble
 				.build();
 	}
 
-	/************************************************************
-	 * Create the GUI and show it.
+	/**
+	 * Creates and shows the main GUI.
 	 */
-	private static void createAndShowGUI()
-	{
+	private static void createAndShowGUI() {
 		// Create and set up the window.
 		frame = new JFrame("Waifu Ramble!!!");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -562,30 +722,27 @@ public class WaifuRamble
 		frame.setVisible(true);
 	}
 
-	public static void main(String[] args)
-	{
-		try
-		{
+	/**
+	 * Runs the program.
+	 * 
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		try {
 			UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
-		} catch (UnsupportedLookAndFeelException ex)
-		{
+		} catch (UnsupportedLookAndFeelException ex) {
 			ex.printStackTrace();
-		} catch (IllegalAccessException ex)
-		{
+		} catch (IllegalAccessException ex) {
 			ex.printStackTrace();
-		} catch (InstantiationException ex)
-		{
+		} catch (InstantiationException ex) {
 			ex.printStackTrace();
-		} catch (ClassNotFoundException ex)
-		{
+		} catch (ClassNotFoundException ex) {
 			ex.printStackTrace();
 		}
 		UIManager.put("swing.boldMetal", Boolean.FALSE);
 
-		javax.swing.SwingUtilities.invokeLater(new Runnable()
-		{
-			public void run()
-			{
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
 				createAndShowGUI();
 			}
 		});
